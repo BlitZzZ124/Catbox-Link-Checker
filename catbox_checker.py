@@ -24,7 +24,7 @@ MAX_RETRIES = 3
 CONCURRENCY = 20
 OUTPUT_FILE = "links.txt"
 TOTAL_ATTEMPTS = 0  # 0 = infinite
-WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
+WEBHOOK_URL = "https://discordapp.com/api/webhooks/1251634016730353704/UgnEZghf-ftHv7H95WDNvZeafw_SZZQvAlMpdr5GTOQVj7wdeu0p6YMHNfJK3AczkRoe" # REPLACE THIS WITH YOUR DISCORD WEBHOOK
 
 
 def print_banner():
@@ -40,7 +40,7 @@ $$    $$/ $$    $$ |  $$  $$/ $$    $$/ $$    $$/ /$$/ $$  |/  |$$ | $$ | $$ |$$
  $$$$$$/   $$$$$$$/    $$$$/  $$$$$$$/   $$$$$$/  $$/   $$/ $$/ $$/  $$/  $$/  $$$$$$/   $$$$$$$/ 
                                                                                                   
                                                                                                                                                                                                   
-        Catbox Link Checker
+        Catbox Link Checker - made by https://github.com/BlitZzZ124
     """
     print(Fore.CYAN + banner)
 
@@ -59,7 +59,12 @@ async def send_webhook(session, url):
     embed = {
         "title": "✅ Catbox Link Found",
         "description": f"[Click to view]({url})",
-        "color": 0x00ff00
+        "color": 0x00ff00,
+        "author": {
+            "name": "Made by BlitZ",
+            "url": "https://github.com/BlitZzZ124",
+            "icon_url": "https://i.imgur.com/IkhAcl8.jpeg"
+        }
     }
 
     if ext in IMAGE_EXTENSIONS:
@@ -75,6 +80,7 @@ async def send_webhook(session, url):
                 print(f"{Fore.RED}[WEBHOOK ERROR] Status: {resp.status}")
     except Exception as e:
         print(f"{Fore.RED}[WEBHOOK ERROR] → {e}")
+
 
 
 async def check_link(session, sem, url):
@@ -116,6 +122,13 @@ async def main():
     print_banner()
     sem = asyncio.Semaphore(CONCURRENCY)
     async with aiohttp.ClientSession() as session:
+        # 🔔 Notify on startup
+        if WEBHOOK_URL:
+            try:
+                await session.post(WEBHOOK_URL, json={"content": "🚀 Catbox Checker is now running!"})
+            except Exception as e:
+                print(f"{Fore.RED}[WEBHOOK ERROR] Failed to notify startup → {e}")
+
         attempt = 0
         while True:
             if TOTAL_ATTEMPTS and attempt >= TOTAL_ATTEMPTS:
@@ -125,6 +138,7 @@ async def main():
             url = f"https://files.catbox.moe/{filename}"
             asyncio.create_task(check_link(session, sem, url))
             await asyncio.sleep(0.05)
+
 
 
 # Flask app setup
