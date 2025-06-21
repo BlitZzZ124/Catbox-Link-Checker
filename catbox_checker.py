@@ -24,7 +24,7 @@ MAX_RETRIES = 3
 CONCURRENCY = 20
 OUTPUT_FILE = "links.txt"
 TOTAL_ATTEMPTS = 0  # 0 = infinite
-WEBHOOK_URL = "https://discordapp.com/api/webhooks/1251634016730353704/UgnEZghf-ftHv7H95WDNvZeafw_SZZQvAlMpdr5GTOQVj7wdeu0p6YMHNfJK3AczkRoe" # REPLACE THIS WITH YOUR DISCORD WEBHOOK
+WEBHOOK_URL = "https://discordapp.com/api/webhooks/" # REPLACE THIS WITH YOUR DISCORD WEBHOOK
 
 
 def print_banner():
