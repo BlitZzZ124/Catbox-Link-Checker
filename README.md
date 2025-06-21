@@ -11,7 +11,6 @@ A fast, asynchronous tool that generates and checks random [Catbox.moe](https://
 - ✅ **Saves valid links to `links.txt`**
 - 🎯 **Sends valid results to a Discord webhook with embeds**
 - 🖼️ **Auto-displays images and videos in embed previews**
-- 🔒 **Uses environment variable for webhook**
 - 🔁 **Run forever or limit by attempt count**
 
 ---
