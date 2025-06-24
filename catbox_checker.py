@@ -46,9 +46,10 @@ $$    $$/ $$    $$ |  $$  $$/ $$    $$/ $$    $$/ /$$/ $$  |/  |$$ | $$ | $$ |$$
 
 
 def generate_random_filename():
-    name = ''.join(random.choices(string.ascii_lowercase, k=6))
+    name = ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
     ext = random.choice(ALLOWED_EXTENSIONS)
     return name + ext
+
 
 
 async def send_webhook(session, url):
