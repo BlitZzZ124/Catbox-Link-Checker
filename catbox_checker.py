@@ -21,10 +21,13 @@ IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp", ".svg"]
 VIDEO_EXTENSIONS = [".mp4", ".webm"]
 
 MAX_RETRIES = 3
-CONCURRENCY = 20
+CONCURRENCY = 30
 OUTPUT_FILE = "links.txt"
 TOTAL_ATTEMPTS = 0  # 0 = infinite
 WEBHOOK_URL = "https://discordapp.com/api/webhooks/" # REPLACE THIS WITH YOUR DISCORD WEBHOOK
+TELEGRAM_BOT_TOKEN = ""  # Replace with your bot token
+TELEGRAM_CHAT_ID = ""      # Replace with your chat ID
+
 
 
 def print_banner():
@@ -57,7 +60,7 @@ async def send_webhook(session, url):
     if not WEBHOOK_URL or WEBHOOK_URL == "YOUR_DISCORD_WEBHOOK_HERE":
         return
 
-    ext = url[-4:].lower()
+    ext = url.lower()
     embed = {
         "title": "✅ Catbox Link Found",
         "description": f"[Click to view]({url})",
@@ -69,10 +72,14 @@ async def send_webhook(session, url):
         }
     }
 
-    if ext in IMAGE_EXTENSIONS:
+    # Show as image if possible
+    if any(ext.endswith(image_ext) for image_ext in IMAGE_EXTENSIONS):
         embed["image"] = {"url": url}
-    elif ext in VIDEO_EXTENSIONS:
-        embed["video"] = {"url": url}
+
+    # For videos, Discord won’t autoplay or embed them inline unless they're directly uploaded,
+    # so we just keep the clickable description
+    elif any(ext.endswith(video_ext) for video_ext in VIDEO_EXTENSIONS):
+        embed["description"] += "\n📹 Video file detected. (May not preview inline)"
 
     payload = {"embeds": [embed]}
 
@@ -82,6 +89,47 @@ async def send_webhook(session, url):
                 print(f"{Fore.RED}[WEBHOOK ERROR] Status: {resp.status}")
     except Exception as e:
         print(f"{Fore.RED}[WEBHOOK ERROR] → {e}")
+
+async def send_telegram(session, url):
+    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+        return
+
+    ext = url.lower()
+    caption = f"✅ <b>Catbox Link Found</b>\n<a href=\"{url}\">Click to view</a>\n\nMade by <a href='https://github.com/BlitZzZ124'>BlitZ</a>"
+
+    api_url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}"
+
+    try:
+        if any(ext.endswith(image_ext) for image_ext in IMAGE_EXTENSIONS):
+            send_url = f"{api_url}/sendPhoto"
+            data = {
+                "chat_id": TELEGRAM_CHAT_ID,
+                "photo": url,
+                "caption": caption,
+                "parse_mode": "HTML"
+            }
+        elif any(ext.endswith(video_ext) for video_ext in VIDEO_EXTENSIONS):
+            send_url = f"{api_url}/sendVideo"
+            data = {
+                "chat_id": TELEGRAM_CHAT_ID,
+                "video": url,
+                "caption": caption,
+                "parse_mode": "HTML"
+            }
+        else:
+            send_url = f"{api_url}/sendMessage"
+            data = {
+                "chat_id": TELEGRAM_CHAT_ID,
+                "text": caption,
+                "parse_mode": "HTML",
+                "disable_web_page_preview": False
+            }
+
+        async with session.post(send_url, data=data) as resp:
+            if resp.status != 200:
+                print(f"{Fore.RED}[TELEGRAM ERROR] Status: {resp.status}")
+    except Exception as e:
+        print(f"{Fore.RED}[TELEGRAM ERROR] → {e}")
 
 
 
@@ -109,6 +157,8 @@ async def check_link(session, sem, url):
                         with open(OUTPUT_FILE, "a") as f:
                             f.write(url + "\n")
                         await send_webhook(session, url)
+                        await send_telegram(session, url)
+
                         return
                     else:
                         print(
@@ -130,7 +180,7 @@ async def main():
                 await session.post(WEBHOOK_URL, json={"content": "🚀 Catbox Checker is now running!"})
             except Exception as e:
                 print(f"{Fore.RED}[WEBHOOK ERROR] Failed to notify startup → {e}")
-
+            await send_telegram_startup_message(session)
         attempt = 0
         while True:
             if TOTAL_ATTEMPTS and attempt >= TOTAL_ATTEMPTS:
@@ -141,6 +191,23 @@ async def main():
             asyncio.create_task(check_link(session, sem, url))
             await asyncio.sleep(0.05)
 
+async def send_telegram_startup_message(session):
+    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+        return
+
+    try:
+        startup_message = "🚀 <b>Catbox Checker is now running!</b>\nMade by <a href='https://github.com/BlitZzZ124'>BlitZ</a>"
+
+        await session.post(
+            f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
+            data={
+                "chat_id": TELEGRAM_CHAT_ID,
+                "text": startup_message,
+                "parse_mode": "HTML"
+            }
+        )
+    except Exception as e:
+        print(f"{Fore.RED}[TELEGRAM ERROR] Failed to notify startup → {e}")
 
 
 # Flask app setup
