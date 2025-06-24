@@ -52,6 +52,7 @@ def generate_random_filename():
 
 
 
+
 async def send_webhook(session, url):
     if not WEBHOOK_URL or WEBHOOK_URL == "YOUR_DISCORD_WEBHOOK_HERE":
         return
