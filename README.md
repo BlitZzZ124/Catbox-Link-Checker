@@ -9,7 +9,7 @@ A fast, asynchronous tool that generates and checks random [Catbox.moe](https://
 - 🔄 **Generates random Catbox URLs**
 - ⚡ **Ultra-fast async checking** (via `aiohttp`)
 - ✅ **Saves valid links to `links.txt`**
-- 🎯 **Sends valid results to a Discord webhook with embeds**
+- 🎯 **Sends valid results to a Discord webhook or Telegram Bot with embeds**
 - 🖼️ **Auto-displays images and videos in embed previews**
 - 🔁 **Run forever or limit by attempt count**
 
